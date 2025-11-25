@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="LeaderboardController">
+   <top>
+      <VBox spacing="10" alignment="CENTER">
+         <children>
+            <Label text="Leaderboard" styleClass="title-label">
+               <font>
+                  <Font size="36.0" />
+               </font>
+            </Label>
+            <Label fx:id="statusLabel" text="Loading..." />
+            <HBox spacing="10" alignment="CENTER">
+               <children>
+                  <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" text="Refresh" />
+                  <Button fx:id="backButton" mnemonicParsing="false" onAction="#handleBack" text="Back to Menu" />
+               </children>
+            </HBox>
+         </children>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
+      </VBox>
+   </top>
+   <center>
+      <TableView fx:id="leaderboardTable" prefHeight="400.0" prefWidth="600.0">
+         <columns>
+            <TableColumn fx:id="nameColumn" prefWidth="150.0" text="Player Name" />
+            <TableColumn fx:id="scoreColumn" prefWidth="150.0" text="Score" />
+            <TableColumn fx:id="movesColumn" prefWidth="150.0" text="Moves" />
+            <TableColumn fx:id="timeColumn" prefWidth="150.0" text="Time" />
+         </columns>
+      </TableView>
+   </center>
+</BorderPane>
+
