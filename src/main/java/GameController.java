@@ -89,17 +89,18 @@ public class GameController implements Initializable {
         cardGrid.setPadding(new Insets(20));
         
         for (int i = 0; i < totalCards; i++) {
+            final int index = i;
             Button cardButton = new Button();
             cardButton.setPrefSize(100, 100);
             cardButton.setStyle("-fx-font-size: 24px;");
             cardButton.setText("?");
-            cardButton.setOnAction(e -> handleCardClick(i));
+            cardButton.setOnAction(e -> handleCardClick(index));
             
-            cardButtons[i] = cardButton;
+            cardButtons[index] = cardButton;
             
             // Calculate grid position
-            int row = i / board.getCols();
-            int col = i % board.getCols();
+            int row = index / board.getCols();
+            int col = index % board.getCols();
             cardGrid.add(cardButton, col, row);
         }
     }

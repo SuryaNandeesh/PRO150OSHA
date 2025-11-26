@@ -13,11 +13,7 @@ public class Game {
     private List<Card> flippedCards; // Tracks currently flipped cards (max 2)
     private boolean isGameOver;
     
-    /**
-     * Constructor for Game
-     * @param rows Number of rows for the game board
-     * @param cols Number of columns for the game board
-     */
+    //Constructor for Game
     public Game(int rows, int cols) {
         this.board = new GameBoard(rows, cols);
         this.score = 0;
