@@ -26,6 +26,15 @@
 2. Run the application:
    ```
    java --module-path "path/to/javafx/lib" --add-modules javafx.controls,javafx.fxml -cp "src/main/java:src/main/resources" Main
+
+### Option 3: VS Code (pre-configured)
+
+This repo includes a basic `.vscode` configuration that makes running from VS Code easier. The project assumes JavaFX SDK is installed on your machine and the SDK `lib` folder is available.
+
+1. If you don't have JavaFX SDK installed, download it from https://openjfx.io and unpack it.
+2. Open `.vscode/settings.json` and/or `.vscode/launch.json` and update the absolute path(s) to your JavaFX SDK `lib` folder (example: `C:\\Program Files\\Java\\javafx-sdk-21.0.9\\lib`).
+3. Use the Run view (or the debug dropdown) and select **Launch Main (JavaFX)** to run the app with VM args that load JavaFX modules.
+4. Alternatively use the Tasks view to run the **java: run Main (JavaFX)** task which compiles and launches the app using the configured JavaFX path.
    ```
 
 ## Features
