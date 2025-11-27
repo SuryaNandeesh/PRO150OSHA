@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+        "type": "java",
+        "name": "Main",
+        "request": "launch",
+        "mainClass": "Main",
+        "projectName": "PRO150OSHA_400e2f93",
+        "vmArgs": "--module-path \"C:\\Program Files\\Java\\javafx-sdk-21.0.9\\lib\" --add-modules javafx.controls,javafx.fxml",
+        "classPaths": [
+            "${workspaceFolder}\\out\\classes",
+            "${workspaceFolder}\\src\\main\\resources"
+        ]
+    },
+    {
+        "type": "java",
+        "name": "Launch Main (JavaFX)",
+        "request": "launch",
+        "mainClass": "Main",
+        "projectName": "PRO150OSHA",
+        "vmArgs": "--module-path \"C:\\Program Files\\Java\\javafx-sdk-21.0.9\\lib\" --add-modules javafx.controls,javafx.fxml"
+    }
+]
+}
