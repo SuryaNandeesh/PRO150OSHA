@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "javac: compile",
+      "type": "shell",
+      "command": "javac",
+      "args": [
+        "-cp",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.9\\lib\\*",
+        "${workspaceFolder}\\src\\main\\java\\*.java",
+        "-d",
+        "${workspaceFolder}\\out\\classes"
+      ],
+      "problemMatcher": ["$javac"],
+      "group": "build"
+    },
+    {
+      "label": "java: run Main (JavaFX)",
+      "type": "shell",
+      "dependsOn": "javac: compile",
+      "command": "java",
+      "args": [
+        "--module-path",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.9\\lib",
+        "--add-modules",
+        "javafx.controls,javafx.fxml",
+        "-cp",
+        "${workspaceFolder}\\out\\classes;${workspaceFolder}\\src\\main\\resources",
+        "Main"
+      ],
+      "group": "none"
+    }
+  ]
+}
