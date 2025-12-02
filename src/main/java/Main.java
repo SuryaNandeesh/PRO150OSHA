@@ -4,7 +4,7 @@ import javafx.stage.Stage;
 /**
  * The entry point for the Memory Game application.
  * This initializes JavaFX and loads the first scene (main menu).
- * fix main
+ * fix main for all
  */
 public class Main extends Application {
 
