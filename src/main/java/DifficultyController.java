@@ -5,10 +5,10 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
- * Controller for the main menu scene.
- * Handles navigation to game and leaderboard.
+ * Controller for the difficulty selection scene.
+ * Handles navigation to game with selected difficulty.
  */
-public class MainMenuController implements Initializable {
+public class DifficultyController implements Initializable {
     
     private SceneManager sceneManager;
     
@@ -26,31 +26,42 @@ public class MainMenuController implements Initializable {
     }
     
     /**
-     * Handles the "Start Game" button click
+     * Handles the "Easy" button click
      */
     @FXML
-    private void handleStartGame() {
+    private void handleEasy() {
         if (sceneManager != null) {
-            sceneManager.showDifficultySelection();
+            sceneManager.showGame("easy");
         }
     }
     
     /**
-     * Handles the "Leaderboard" button click
+     * Handles the "Medium" button click
      */
     @FXML
-    private void handleLeaderboard() {
+    private void handleMedium() {
         if (sceneManager != null) {
-            sceneManager.showLeaderboard();
+            sceneManager.showGame("medium");
         }
     }
     
     /**
-     * Handles the "Exit" button click
+     * Handles the "Hard" button click
      */
     @FXML
-    private void handleExit() {
-        System.exit(0);
+    private void handleHard() {
+        if (sceneManager != null) {
+            sceneManager.showGame("hard");
+        }
+    }
+    
+    /**
+     * Handles the "Back" button click
+     */
+    @FXML
+    private void handleBack() {
+        if (sceneManager != null) {
+            sceneManager.showMainMenu();
+        }
     }
 }
-
