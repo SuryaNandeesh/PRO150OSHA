@@ -29,11 +29,32 @@ public class GameBoard {
     
     /**
      * Initializes the board with pairs of cards and shuffles them.
-     * Creates (rows * cols / 2) pairs of cards using images from the appropriate folder.
+     * Gets card order from API, then maps to local images.
      */
     private void initializeBoard() {
         int totalCards = rows * cols;
         int pairs = totalCards / 2;
+        
+        // Get deck from API
+        ApiClientService apiClient = ApiClientService.getInstance();
+        ApiClientService.DeckInfo deckInfo = null;
+        
+        if (apiClient.checkApiHealth()) {
+            try {
+                deckInfo = apiClient.getDeck(difficulty);
+                if (deckInfo != null && deckInfo.getCardIds().size() == totalCards) {
+                    System.out.println("Deck received from API: " + deckInfo.getCardIds().size() + " cards");
+                } else {
+                    System.out.println("API returned invalid deck, using local generation");
+                    deckInfo = null;
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting deck from API: " + e.getMessage());
+                deckInfo = null;
+            }
+        } else {
+            System.out.println("API not available, using local deck generation");
+        }
         
         // Get the image folder path based on difficulty
         String folderName = "";
@@ -140,16 +161,35 @@ public class GameBoard {
                 cards.add(new Card("" + i));
             }
         } else {
-            // Create pairs of cards with absolute image paths
-            for (int i = 0; i < pairs; i++) {
-                String imagePath = basePath + imageFiles[i].getName();
-                cards.add(new Card(imagePath));
-                cards.add(new Card(imagePath));
+            // Use deck order from API if available, otherwise generate locally
+            if (deckInfo != null && deckInfo.getCardIds().size() == totalCards) {
+                // Use API-provided card order
+                List<Integer> cardIds = deckInfo.getCardIds();
+                for (int i = 0; i < totalCards; i++) {
+                    int cardId = cardIds.get(i);
+                    // Map card ID to image (cardId should be 0 to pairs-1)
+                    if (cardId >= 0 && cardId < pairs) {
+                        String imagePath = basePath + imageFiles[cardId].getName();
+                        cards.add(new Card(imagePath));
+                    } else {
+                        // Fallback if cardId is out of range
+                        String imagePath = basePath + imageFiles[cardId % pairs].getName();
+                        cards.add(new Card(imagePath));
+                    }
+                }
+                System.out.println("Cards ordered using API deck");
+            } else {
+                // Create pairs of cards with absolute image paths (local generation)
+                for (int i = 0; i < pairs; i++) {
+                    String imagePath = basePath + imageFiles[i].getName();
+                    cards.add(new Card(imagePath));
+                    cards.add(new Card(imagePath));
+                }
+                // Shuffle the cards randomly
+                Collections.shuffle(cards);
+                System.out.println("Cards shuffled locally (API unavailable)");
             }
         }
-        
-        // Shuffle the cards randomly
-        Collections.shuffle(cards);
     }
     
     /**

@@ -195,7 +195,9 @@ public class GameController implements Initializable {
         
         // Check if game is over
         if (game.isGameOver()) {
-            handleGameOver();
+            // Schedule game over handling on next pulse to avoid showAndWait
+            // during animation/layout processing (JavaFX restriction)
+            javafx.application.Platform.runLater(this::handleGameOver);
         }
     }
     
@@ -320,45 +322,89 @@ public class GameController implements Initializable {
     }
     
     /**
-     * Handles the game over state - automatically saves score if logged in
+     * Handles the game over state - shows win screen and asks to submit score
      */
     private void handleGameOver() {
         timeThreadRunning = false;
         
-        // Show game over alert
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Game Over!");
-        alert.setHeaderText("Congratulations! You've completed the memory game!");
-        alert.setContentText("Score: " + game.getScore() + "\n" +
-                           "Moves: " + game.getMoves() + "\n" +
-                           "Time: " + formatTime(game.getElapsedTime()));
-        alert.showAndWait();
+        // Show win screen with game stats
+        Alert winAlert = new Alert(Alert.AlertType.INFORMATION);
+        winAlert.setTitle("🎉 You Win! 🎉");
+        winAlert.setHeaderText("Congratulations! You've completed the memory game!");
+        winAlert.setContentText("Final Score: " + game.getScore() + "\n" +
+                               "Total Moves: " + game.getMoves() + "\n" +
+                               "Time Taken: " + formatTime(game.getElapsedTime()) + "\n" +
+                               "Difficulty: " + difficulty.substring(0, 1).toUpperCase() + difficulty.substring(1));
+        winAlert.showAndWait();
         
-        // Auto-save score if user is logged in
+        // Handle score submission based on login status
         if (UserSession.getInstance().isLoggedIn()) {
-            String username = UserSession.getInstance().getUsername();
-            DatabaseService.getInstance().saveScore(
-                username,
-                game.getScore(),
-                game.getMoves(),
-                game.getElapsedTime(),
-                difficulty
-            );
+            // User is logged in - ask if they want to submit
+            Alert submitAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            submitAlert.setTitle("Submit Score?");
+            submitAlert.setHeaderText("Would you like to submit your score to the leaderboard?");
+            submitAlert.setContentText("Score: " + game.getScore() + "\n" +
+                                     "Moves: " + game.getMoves() + "\n" +
+                                     "Time: " + formatTime(game.getElapsedTime()));
             
+            submitAlert.showAndWait().ifPresent(response -> {
+                if (response == javafx.scene.control.ButtonType.OK) {
+                    submitScoreToLeaderboard();
+                }
+            });
+        } else {
+            // User is not logged in - remind them about saving scores
+            Alert reminderAlert = new Alert(Alert.AlertType.INFORMATION);
+            reminderAlert.setTitle("Score Not Saved");
+            reminderAlert.setHeaderText("Login to Save Your Score!");
+            reminderAlert.setContentText("Your score: " + game.getScore() + "\n" +
+                                       "Moves: " + game.getMoves() + "\n" +
+                                       "Time: " + formatTime(game.getElapsedTime()) + "\n\n" +
+                                       "💡 Tip: Login from the main menu to save your scores\n" +
+                                       "and compete on the leaderboard!");
+            reminderAlert.showAndWait();
+        }
+    }
+    
+    /**
+     * Submits the current game score to the leaderboard via API
+     */
+    private void submitScoreToLeaderboard() {
+        String username = UserSession.getInstance().getUsername();
+        ApiClientService apiClient = ApiClientService.getInstance();
+        
+        if (!apiClient.checkApiHealth()) {
+            Alert apiAlert = new Alert(Alert.AlertType.WARNING);
+            apiAlert.setTitle("API Unavailable");
+            apiAlert.setHeaderText("Cannot save score");
+            apiAlert.setContentText("API server is not running. Please start the API server.");
+            apiAlert.showAndWait();
+            return;
+        }
+        
+        boolean success = apiClient.submitScore(
+            username,
+            game.getScore(),
+            game.getMoves(),
+            game.getElapsedTime(),
+            difficulty
+        );
+        
+        if (success) {
             Alert savedAlert = new Alert(Alert.AlertType.INFORMATION);
-            savedAlert.setTitle("Score Saved");
-            savedAlert.setHeaderText("Your score has been saved!");
+            savedAlert.setTitle("Score Submitted!");
+            savedAlert.setHeaderText("Your score has been saved to the leaderboard!");
             savedAlert.setContentText("Score: " + game.getScore() + "\n" +
                                     "Moves: " + game.getMoves() + "\n" +
-                                    "Time: " + formatTime(game.getElapsedTime()));
+                                    "Time: " + formatTime(game.getElapsedTime()) + "\n\n" +
+                                    "Check the leaderboard to see your ranking!");
             savedAlert.showAndWait();
         } else {
-            Alert loginAlert = new Alert(Alert.AlertType.INFORMATION);
-            loginAlert.setTitle("Score Not Saved");
-            loginAlert.setHeaderText("Please log in to save your score");
-            loginAlert.setContentText("Your score: " + game.getScore() + "\n" +
-                                    "Login from the main menu to save scores!");
-            loginAlert.showAndWait();
+            Alert errorAlert = new Alert(Alert.AlertType.WARNING);
+            errorAlert.setTitle("Submission Failed");
+            errorAlert.setHeaderText("Failed to submit score");
+            errorAlert.setContentText("Please try again later.");
+            errorAlert.showAndWait();
         }
     }
     

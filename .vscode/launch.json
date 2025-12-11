@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "MemoryGameApiApplication",
+      "request": "launch",
+      "mainClass": "MemoryGameApiApplication",
+      "projectName": "memory-game"
+    },
+    {
+      "type": "java",
       "name": "Main",
       "request": "launch",
       "mainClass": "Main",
@@ -15,17 +22,12 @@
       "mainClass": "Main",
       "projectName": "PRO150OSHA",
       "vmArgs": "--module-path \"C:\\Program Files\\Java\\javafx-sdk-21.0.9\\lib\" --add-modules javafx.controls,javafx.fxml",
+      "classPaths": [
+        "${workspaceFolder}/target/classes",
+        "${workspaceFolder}/src/main/resources",
+        "${workspaceFolder}/lib/sqlite-jdbc.jar"
+      ],
       "console": "internalConsole"
-    },
-    {
-      "type": "java",
-      "name": "Launch Memory Game (Maven)",
-      "request": "launch",
-      "mainClass": "Main",
-      "projectName": "PRO150OSHA",
-      "vmArgs": "--module-path \"C:\\Program Files\\Java\\javafx-sdk-21.0.9\\lib\" --add-modules javafx.controls,javafx.fxml",
-      "console": "internalConsole",
-      "preLaunchTask": "maven-compile"
     }
   ]
 }

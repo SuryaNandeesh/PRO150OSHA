@@ -29,12 +29,12 @@ public class LoginController implements Initializable {
     private Button backButton;
     
     private SceneManager sceneManager;
-    private DatabaseService db;
+    private ApiClientService apiClient;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         sceneManager = SceneManager.getInstance();
-        db = DatabaseService.getInstance();
+        apiClient = ApiClientService.getInstance();
     }
     
     public void setSceneManager(SceneManager sceneManager) {
@@ -51,12 +51,18 @@ public class LoginController implements Initializable {
             return;
         }
         
-        if (db.loginUser(username, password)) {
-            UserSession.getInstance().login(username);
-            showAlert("Success", "Logged in as " + username);
+        if (!apiClient.checkApiHealth()) {
+            showAlert("Error", "API server is not running. Please start the API server first.");
+            return;
+        }
+        
+        ApiClientService.AuthResult result = apiClient.login(username, password);
+        if (result.isSuccess()) {
+            UserSession.getInstance().login(result.getUsername());
+            showAlert("Success", "Logged in as " + result.getUsername());
             sceneManager.showMainMenu();
         } else {
-            showAlert("Error", "Invalid username or password.");
+            showAlert("Error", result.getMessage());
         }
     }
     
@@ -69,13 +75,61 @@ public class LoginController implements Initializable {
             showAlert("Error", "Please enter both username and password.");
             return;
         }
+
+        // Simple username rules (same as API, but checked early for user friendliness):
+        // - 4 to 20 characters (including spaces)
+        // - No leading/trailing spaces
+        // - Only single spaces between words
+        if (username.length() < 4 || username.length() > 20) {
+            showAlert("Error", "Username must be between 4 and 20 characters.");
+            return;
+        }
+        if (username.startsWith(" ") || username.endsWith(" ") || username.contains("  ")) {
+            showAlert("Error", "Username can only have single spaces between words.");
+            return;
+        }
+
+        // Simple password rules (same as API):
+        // - 8 to 50 characters
+        // - No spaces
+        // - At least one capital letter, one number, and one special character
+        if (password.length() < 8 || password.length() > 50) {
+            showAlert("Error", "Password must be between 8 and 50 characters.");
+            return;
+        }
+        if (password.contains(" ")) {
+            showAlert("Error", "Password cannot contain spaces.");
+            return;
+        }
+        boolean hasUpper = false;
+        boolean hasDigit = false;
+        boolean hasSpecial = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                hasUpper = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            } else if (!Character.isLetterOrDigit(c)) {
+                hasSpecial = true;
+            }
+        }
+        if (!hasUpper || !hasDigit || !hasSpecial) {
+            showAlert("Error", "Password needs at least one capital letter, one number, and one special character.");
+            return;
+        }
         
-        if (db.registerUser(username, password)) {
-            UserSession.getInstance().login(username);
-            showAlert("Success", "Account created! Logged in as " + username);
+        if (!apiClient.checkApiHealth()) {
+            showAlert("Error", "API server is not running. Please start the API server first.");
+            return;
+        }
+        
+        ApiClientService.AuthResult result = apiClient.register(username, password);
+        if (result.isSuccess()) {
+            UserSession.getInstance().login(result.getUsername());
+            showAlert("Success", "Account created! Logged in as " + result.getUsername());
             sceneManager.showMainMenu();
         } else {
-            showAlert("Error", "Username already exists. Please choose another.");
+            showAlert("Error", result.getMessage());
         }
     }
     

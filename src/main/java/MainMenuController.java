@@ -17,6 +17,9 @@ public class MainMenuController implements Initializable {
     @FXML
     private Button loginButton;
     
+    @FXML
+    private Label loginWarningLabel;
+    
     private SceneManager sceneManager;
     
     @Override
@@ -34,9 +37,16 @@ public class MainMenuController implements Initializable {
         if (UserSession.getInstance().isLoggedIn()) {
             userLabel.setText("Logged in as: " + UserSession.getInstance().getUsername());
             loginButton.setText("Logout");
+            if (loginWarningLabel != null) {
+                loginWarningLabel.setVisible(false);
+            }
         } else {
             userLabel.setText("Not logged in");
             loginButton.setText("Login");
+            if (loginWarningLabel != null) {
+                loginWarningLabel.setVisible(true);
+                loginWarningLabel.setText("⚠️ Login to save your scores to the leaderboard!");
+            }
         }
     }
     

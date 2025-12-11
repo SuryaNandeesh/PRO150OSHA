@@ -6,6 +6,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import java.awt.Desktop;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -62,13 +64,23 @@ public class LeaderboardController implements Initializable {
      */
     public void setSceneManager(SceneManager sceneManager) {
         this.sceneManager = sceneManager;
+        // Refresh leaderboard when scene is shown
+        loadLeaderboard();
     }
     
     /**
-     * Loads leaderboard data from the database
+     * Loads leaderboard data from the API
      */
     private void loadLeaderboard() {
-        List<Score> scores = DatabaseService.getInstance().getLeaderboard(50);
+        ApiClientService apiClient = ApiClientService.getInstance();
+        
+        if (!apiClient.checkApiHealth()) {
+            statusLabel.setText("API server is not running. Please start the API server.");
+            leaderboardTable.getItems().clear();
+            return;
+        }
+        
+        List<Score> scores = apiClient.getLeaderboard(50);
         if (scores != null && !scores.isEmpty()) {
             leaderboardTable.getItems().setAll(scores);
             statusLabel.setText("Loaded " + scores.size() + " scores");
@@ -84,6 +96,31 @@ public class LeaderboardController implements Initializable {
     @FXML
     private void handleRefresh() {
         loadLeaderboard();
+    }
+    
+    /**
+     * Public method to refresh leaderboard (called from SceneManager)
+     */
+    public void refreshLeaderboard() {
+        loadLeaderboard();
+    }
+    
+    /**
+     * Opens the web version of the leaderboard (API JSON) in the default browser.
+     */
+    @FXML
+    private void handleOpenWebLeaderboard() {
+        String url = "http://localhost:8080/leaderboard?limit=50";
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(new URI(url));
+            } else {
+                statusLabel.setText("Cannot open browser on this system. URL: " + url);
+            }
+        } catch (Exception e) {
+            statusLabel.setText("Failed to open web leaderboard.");
+            e.printStackTrace();
+        }
     }
     
     /**

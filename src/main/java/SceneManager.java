@@ -119,10 +119,13 @@ public class SceneManager {
             Scene scene = new Scene(loader.load(), 800, 600);
             scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
             
-            // Set SceneManager in the controller
+            // Set SceneManager in the controller (this will trigger refresh)
             Object controller = loader.getController();
             if (controller instanceof LeaderboardController) {
-                ((LeaderboardController) controller).setSceneManager(this);
+                LeaderboardController leaderboardController = (LeaderboardController) controller;
+                leaderboardController.setSceneManager(this);
+                // Force refresh to get latest scores
+                leaderboardController.refreshLeaderboard();
             }
             
             primaryStage.setTitle("Memory Game - Leaderboard");
