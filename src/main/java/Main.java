@@ -12,13 +12,28 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        sceneManager = new SceneManager(primaryStage);
-        // Show the main menu when the application starts
-        sceneManager.showMainMenu();
-        primaryStage.show();
+        try {
+            System.out.println("Starting Memory Game...");
+            sceneManager = new SceneManager(primaryStage);
+            System.out.println("SceneManager created");
+            // Show the main menu when the application starts
+            sceneManager.showMainMenu();
+            System.out.println("Main menu shown");
+            primaryStage.show();
+            System.out.println("Stage shown - application ready!");
+        } catch (Exception e) {
+            System.err.println("Error starting application: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
-        launch(args);
+        System.out.println("Main method called");
+        try {
+            launch(args);
+        } catch (Exception e) {
+            System.err.println("Error launching application: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
