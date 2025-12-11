@@ -49,43 +49,72 @@ public class GameBoard {
         File imagesDir = null;
         File currentDir = new File(System.getProperty("user.dir"));
         
-        // Strategy: Find the project root by looking for the "src" or ".vscode" folder
+        // Strategy: Find the project root by looking for the "src" or "images" folder
         File projectRoot = null;
         File searchDir = currentDir;
         
-        // Go up the directory tree until we find a folder with "src" or ".vscode"
+        // Go up the directory tree until we find a folder with "src" or "images"
         while (searchDir != null) {
             File srcDir = new File(searchDir, "src");
-            File vscodeDir = new File(searchDir, ".vscode");
+            File imagesCheck = new File(searchDir, "images");
             if ((srcDir.exists() && srcDir.isDirectory()) || 
-                (vscodeDir.exists() && vscodeDir.isDirectory())) {
+                (imagesCheck.exists() && imagesCheck.isDirectory())) {
                 projectRoot = searchDir;
                 break;
             }
             searchDir = searchDir.getParentFile();
         }
         
-        // If we found the project root, use it; otherwise try current directory
+        // If we found the project root, use it
         if (projectRoot != null) {
-            File testDir = new File(projectRoot, "images/" + folderName);
+            File testDir = new File(projectRoot, "images" + File.separator + folderName);
             if (testDir.exists() && testDir.isDirectory()) {
                 imagesDir = testDir;
+                System.out.println("Found images directory: " + testDir.getAbsolutePath());
             }
         }
         
         // Fallback: try relative to current directory
         if (imagesDir == null) {
-            File testDir = new File(currentDir, "images/" + folderName);
+            File testDir = new File(currentDir, "images" + File.separator + folderName);
             if (testDir.exists() && testDir.isDirectory()) {
                 imagesDir = testDir;
+                System.out.println("Found images directory (relative): " + testDir.getAbsolutePath());
             }
         }
         
         // Another fallback: try going up from current directory
         if (imagesDir == null && currentDir.getParent() != null) {
-            File testDir = new File(currentDir.getParent(), "images/" + folderName);
+            File testDir = new File(currentDir.getParent(), "images" + File.separator + folderName);
             if (testDir.exists() && testDir.isDirectory()) {
                 imagesDir = testDir;
+                System.out.println("Found images directory (parent): " + testDir.getAbsolutePath());
+            }
+        }
+        
+        // Last fallback: try from the compiled class location
+        if (imagesDir == null) {
+            try {
+                // Try to get the location of the GameBoard class file
+                String classPath = GameBoard.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+                if (classPath != null) {
+                    File classFile = new File(classPath);
+                    // If it's a JAR, get the parent; if it's a directory, use it
+                    File baseDir = classFile.isFile() ? classFile.getParentFile() : classFile;
+                    // Go up to find project root
+                    while (baseDir != null && !new File(baseDir, "images").exists()) {
+                        baseDir = baseDir.getParentFile();
+                    }
+                    if (baseDir != null) {
+                        File testDir = new File(baseDir, "images" + File.separator + folderName);
+                        if (testDir.exists() && testDir.isDirectory()) {
+                            imagesDir = testDir;
+                            System.out.println("Found images directory (from class path): " + testDir.getAbsolutePath());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Could not determine class path: " + e.getMessage());
             }
         }
         

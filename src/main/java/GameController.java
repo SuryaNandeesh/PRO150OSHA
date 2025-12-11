@@ -5,11 +5,9 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.io.File;
@@ -229,37 +227,47 @@ public class GameController implements Initializable {
     /**
      * Sets an image on a button
      * @param button The button to set the image on
-     * @param imagePath The path to the image file
+     * @param imagePath The path to the image file (can be local file path or HTTP URL)
      */
     private void setCardImage(Button button, String imagePath) {
         try {
-            File imageFile = new File(imagePath);
-            if (imageFile.exists()) {
-                Image image = new Image(imageFile.toURI().toString());
-                ImageView imageView = new ImageView(image);
-                
-                // Set image size based on button size
-                int imageSize = 60;
-                if (rows == 6) {
-                    imageSize = 60;
-                } else if (rows == 8) {
-                    imageSize = 50;
-                } else if (rows == 10) {
-                    imageSize = 40;
-                }
-                
-                imageView.setFitWidth(imageSize);
-                imageView.setFitHeight(imageSize);
-                imageView.setPreserveRatio(true);
-                
-                button.setGraphic(imageView);
-                button.setText("");
+            Image image;
+            
+            // Check if it's an HTTP/HTTPS URL
+            if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+                image = new Image(imagePath);
             } else {
-                // Fallback if image not found
-                System.out.println("Image not found: " + imagePath);
-                button.setText("?");
-                button.setGraphic(null);
+                // Local file path
+                File imageFile = new File(imagePath);
+                if (imageFile.exists()) {
+                    image = new Image(imageFile.toURI().toString());
+                } else {
+                    // Fallback if image not found
+                    System.out.println("Image not found: " + imagePath);
+                    button.setText("?");
+                    button.setGraphic(null);
+                    return;
+                }
             }
+            
+            ImageView imageView = new ImageView(image);
+            
+            // Set image size based on button size
+            int imageSize = 60;
+            if (rows == 6) {
+                imageSize = 60;
+            } else if (rows == 8) {
+                imageSize = 50;
+            } else if (rows == 10) {
+                imageSize = 40;
+            }
+            
+            imageView.setFitWidth(imageSize);
+            imageView.setFitHeight(imageSize);
+            imageView.setPreserveRatio(true);
+            
+            button.setGraphic(imageView);
+            button.setText("");
         } catch (Exception e) {
             // Fallback if image loading fails
             System.out.println("Error loading image: " + imagePath + " - " + e.getMessage());
@@ -312,7 +320,7 @@ public class GameController implements Initializable {
     }
     
     /**
-     * Handles the game over state - shows dialog and prompts for player name
+     * Handles the game over state - automatically saves score if logged in
      */
     private void handleGameOver() {
         timeThreadRunning = false;
@@ -326,30 +334,32 @@ public class GameController implements Initializable {
                            "Time: " + formatTime(game.getElapsedTime()));
         alert.showAndWait();
         
-        // Prompt for player name
-        TextInputDialog dialog = new TextInputDialog("Player");
-        dialog.setTitle("Save Score");
-        dialog.setHeaderText("Enter your name to save your score:");
-        dialog.setContentText("Name:");
-        
-        dialog.showAndWait().ifPresent(name -> {
-            if (!name.trim().isEmpty()) {
-                // Create score object
-                Score score = new Score(name.trim(), game.getScore(), 
-                                      game.getMoves(), game.getElapsedTime());
-                
-                // TODO: Send score to API when HttpClientService is implemented
-                // HttpClientService.getInstance().submitScore(score);
-                
-                // For now, just show a message
-                Alert savedAlert = new Alert(Alert.AlertType.INFORMATION);
-                savedAlert.setTitle("Score Saved");
-                savedAlert.setHeaderText("Your score has been saved!");
-                savedAlert.setContentText("Name: " + score.getPlayerName() + "\n" +
-                                        "Score: " + score.getScore());
-                savedAlert.showAndWait();
-            }
-        });
+        // Auto-save score if user is logged in
+        if (UserSession.getInstance().isLoggedIn()) {
+            String username = UserSession.getInstance().getUsername();
+            DatabaseService.getInstance().saveScore(
+                username,
+                game.getScore(),
+                game.getMoves(),
+                game.getElapsedTime(),
+                difficulty
+            );
+            
+            Alert savedAlert = new Alert(Alert.AlertType.INFORMATION);
+            savedAlert.setTitle("Score Saved");
+            savedAlert.setHeaderText("Your score has been saved!");
+            savedAlert.setContentText("Score: " + game.getScore() + "\n" +
+                                    "Moves: " + game.getMoves() + "\n" +
+                                    "Time: " + formatTime(game.getElapsedTime()));
+            savedAlert.showAndWait();
+        } else {
+            Alert loginAlert = new Alert(Alert.AlertType.INFORMATION);
+            loginAlert.setTitle("Score Not Saved");
+            loginAlert.setHeaderText("Please log in to save your score");
+            loginAlert.setContentText("Your score: " + game.getScore() + "\n" +
+                                    "Login from the main menu to save scores!");
+            loginAlert.showAndWait();
+        }
     }
     
     /**

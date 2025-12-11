@@ -38,10 +38,11 @@ public class SceneManager {
             Scene scene = new Scene(loader.load(), 800, 600);
             scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
             
-            // Set SceneManager in the controller if it's a MainMenuController
+            // Set SceneManager in the controller and refresh login status
             Object controller = loader.getController();
             if (controller instanceof MainMenuController) {
-                ((MainMenuController) controller).setSceneManager(this);
+                MainMenuController menuController = (MainMenuController) controller;
+                menuController.setSceneManager(this);
             }
             
             primaryStage.setTitle("Memory Game - Main Menu");
@@ -125,6 +126,28 @@ public class SceneManager {
             }
             
             primaryStage.setTitle("Memory Game - Leaderboard");
+            primaryStage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Loads and displays the login scene
+     */
+    public void showLogin() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/login.fxml"));
+            Scene scene = new Scene(loader.load(), 600, 500);
+            scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+            
+            // Set SceneManager in the controller
+            Object controller = loader.getController();
+            if (controller instanceof LoginController) {
+                ((LoginController) controller).setSceneManager(this);
+            }
+            
+            primaryStage.setTitle("Memory Game - Login");
             primaryStage.setScene(scene);
         } catch (IOException e) {
             e.printStackTrace();
