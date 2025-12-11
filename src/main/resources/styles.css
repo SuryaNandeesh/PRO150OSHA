@@ -16,6 +16,13 @@
     -fx-text-fill: #7f8c8d;
 }
 
+/* Warning label styling */
+.warning-label {
+    -fx-text-fill: #FF6B6B;
+    -fx-font-weight: bold;
+    -fx-font-style: italic;
+}
+
 /* Menu button styling */
 .menu-button {
     -fx-background-color: #3498db;

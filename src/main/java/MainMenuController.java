@@ -1,53 +1,75 @@
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
  * Controller for the main menu scene.
- * Handles navigation to game and leaderboard.
  */
 public class MainMenuController implements Initializable {
+    
+    @FXML
+    private Label userLabel;
+    
+    @FXML
+    private Button loginButton;
+    
+    @FXML
+    private Label loginWarningLabel;
     
     private SceneManager sceneManager;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         sceneManager = SceneManager.getInstance();
+        updateLoginStatus();
     }
     
-    /**
-     * Sets the SceneManager instance (called by SceneManager after loading)
-     * @param sceneManager The SceneManager instance
-     */
     public void setSceneManager(SceneManager sceneManager) {
         this.sceneManager = sceneManager;
+        updateLoginStatus();
     }
     
-    /**
-     * Handles the "Start Game" button click
-     */
+    private void updateLoginStatus() {
+        if (UserSession.getInstance().isLoggedIn()) {
+            userLabel.setText("Logged in as: " + UserSession.getInstance().getUsername());
+            loginButton.setText("Logout");
+            if (loginWarningLabel != null) {
+                loginWarningLabel.setVisible(false);
+            }
+        } else {
+            userLabel.setText("Not logged in");
+            loginButton.setText("Login");
+            if (loginWarningLabel != null) {
+                loginWarningLabel.setVisible(true);
+                loginWarningLabel.setText("⚠️ Login to save your scores to the leaderboard!");
+            }
+        }
+    }
+    
+    @FXML
+    private void handleLogin() {
+        if (UserSession.getInstance().isLoggedIn()) {
+            UserSession.getInstance().logout();
+            updateLoginStatus();
+        } else {
+            sceneManager.showLogin();
+        }
+    }
+    
     @FXML
     private void handleStartGame() {
-        if (sceneManager != null) {
-            sceneManager.showGame();
-        }
+        sceneManager.showDifficultySelection();
     }
     
-    /**
-     * Handles the "Leaderboard" button click
-     */
     @FXML
     private void handleLeaderboard() {
-        if (sceneManager != null) {
-            sceneManager.showLeaderboard();
-        }
+        sceneManager.showLeaderboard();
     }
     
-    /**
-     * Handles the "Exit" button click
-     */
     @FXML
     private void handleExit() {
         System.exit(0);
