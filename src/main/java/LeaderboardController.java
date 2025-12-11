@@ -6,8 +6,9 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import java.awt.Desktop;
+import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -63,25 +64,30 @@ public class LeaderboardController implements Initializable {
      */
     public void setSceneManager(SceneManager sceneManager) {
         this.sceneManager = sceneManager;
+        // Refresh leaderboard when scene is shown
+        loadLeaderboard();
     }
     
     /**
-     * Loads leaderboard data from the API (or shows placeholder data)
+     * Loads leaderboard data from the API
      */
     private void loadLeaderboard() {
-        // TODO: Replace with actual API call when HttpClientService is implemented
-        // List<Score> scores = HttpClientService.getInstance().getLeaderboard();
+        ApiClientService apiClient = ApiClientService.getInstance();
         
-        // For now, show placeholder message
-        statusLabel.setText("Leaderboard data will be loaded from API when implemented.");
+        if (!apiClient.checkApiHealth()) {
+            statusLabel.setText("API server is not running. Please start the API server.");
+            leaderboardTable.getItems().clear();
+            return;
+        }
         
-        // Example placeholder data (remove when API is implemented)
-        List<Score> placeholderScores = new ArrayList<>();
-        placeholderScores.add(new Score("Player 1", 1500, 25, 120));
-        placeholderScores.add(new Score("Player 2", 1200, 30, 150));
-        placeholderScores.add(new Score("Player 3", 1000, 35, 180));
-        
-        leaderboardTable.getItems().setAll(placeholderScores);
+        List<Score> scores = apiClient.getLeaderboard(50);
+        if (scores != null && !scores.isEmpty()) {
+            leaderboardTable.getItems().setAll(scores);
+            statusLabel.setText("Loaded " + scores.size() + " scores");
+        } else {
+            leaderboardTable.getItems().clear();
+            statusLabel.setText("No scores yet. Be the first to play!");
+        }
     }
     
     /**
@@ -90,6 +96,31 @@ public class LeaderboardController implements Initializable {
     @FXML
     private void handleRefresh() {
         loadLeaderboard();
+    }
+    
+    /**
+     * Public method to refresh leaderboard (called from SceneManager)
+     */
+    public void refreshLeaderboard() {
+        loadLeaderboard();
+    }
+    
+    /**
+     * Opens the web version of the leaderboard (API JSON) in the default browser.
+     */
+    @FXML
+    private void handleOpenWebLeaderboard() {
+        String url = "http://localhost:8080/leaderboard?limit=50";
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(new URI(url));
+            } else {
+                statusLabel.setText("Cannot open browser on this system. URL: " + url);
+            }
+        } catch (Exception e) {
+            statusLabel.setText("Failed to open web leaderboard.");
+            e.printStackTrace();
+        }
     }
     
     /**

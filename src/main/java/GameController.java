@@ -5,11 +5,12 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -46,16 +47,44 @@ public class GameController implements Initializable {
     private PauseTransition pauseTransition;
     private Thread timeThread;
     private boolean timeThreadRunning;
-    
-    // Default board size (4x4 = 16 cards = 8 pairs)
-    private static final int ROWS = 4;
-    private static final int COLS = 4;
+    private String difficulty;
+    private int rows;
+    private int cols;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Initialize the game with default board size
-        game = new Game(ROWS, COLS);
         sceneManager = SceneManager.getInstance();
+        // Game will be initialized when difficulty is set
+    }
+    
+    /**
+     * Sets the difficulty and initializes the game
+     * @param difficulty The difficulty level ("easy", "medium", or "hard")
+     */
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+        System.out.println("Setting difficulty to: " + difficulty);
+        
+        // Set board size based on difficulty
+        if (difficulty.equals("easy")) {
+            rows = 6;
+            cols = 6;
+        } else if (difficulty.equals("medium")) {
+            rows = 8;
+            cols = 8;
+        } else if (difficulty.equals("hard")) {
+            rows = 10;
+            cols = 10;
+        } else {
+            // Default fallback
+            rows = 4;
+            cols = 4;
+        }
+        
+        System.out.println("Board size: " + rows + "x" + cols);
+        
+        // Initialize the game with the selected difficulty
+        game = new Game(rows, cols, difficulty);
         
         // Create card buttons
         setupCardGrid();
@@ -84,16 +113,26 @@ public class GameController implements Initializable {
         cardButtons = new Button[totalCards];
         
         cardGrid.getChildren().clear();
-        cardGrid.setHgap(10);
-        cardGrid.setVgap(10);
+        cardGrid.setHgap(5);
+        cardGrid.setVgap(5);
         cardGrid.setPadding(new Insets(20));
+        
+        // Calculate button size based on board size
+        int buttonSize = 80;
+        if (rows == 6) {
+            buttonSize = 80;
+        } else if (rows == 8) {
+            buttonSize = 70;
+        } else if (rows == 10) {
+            buttonSize = 60;
+        }
         
         for (int i = 0; i < totalCards; i++) {
             final int index = i;
             Button cardButton = new Button();
-            cardButton.setPrefSize(100, 100);
-            cardButton.setStyle("-fx-font-size: 24px;");
+            cardButton.setPrefSize(buttonSize, buttonSize);
             cardButton.setText("?");
+            cardButton.setStyle("-fx-font-size: 20px;");
             cardButton.setOnAction(e -> handleCardClick(index));
             
             cardButtons[index] = cardButton;
@@ -156,7 +195,9 @@ public class GameController implements Initializable {
         
         // Check if game is over
         if (game.isGameOver()) {
-            handleGameOver();
+            // Schedule game over handling on next pulse to avoid showAndWait
+            // during animation/layout processing (JavaFX restriction)
+            javafx.application.Platform.runLater(this::handleGameOver);
         }
     }
     
@@ -169,18 +210,71 @@ public class GameController implements Initializable {
         Button button = cardButtons[cardIndex];
         
         if (card.isMatched()) {
-            // Card is matched - show value and disable
-            button.setText(String.valueOf(card.getValue()));
+            // Card is matched - show image and disable
+            setCardImage(button, card.getImagePath());
             button.setDisable(true);
-            button.setStyle("-fx-background-color: #90EE90; -fx-font-size: 24px;");
+            button.setStyle("-fx-background-color: #90EE90;");
         } else if (card.isFlipped()) {
-            // Card is flipped - show value
-            button.setText(String.valueOf(card.getValue()));
-            button.setStyle("-fx-background-color: #FFE4B5; -fx-font-size: 24px;");
+            // Card is flipped - show image
+            setCardImage(button, card.getImagePath());
+            button.setStyle("-fx-background-color: #FFE4B5;");
         } else {
             // Card is face down - show question mark
             button.setText("?");
-            button.setStyle("-fx-background-color: #D3D3D3; -fx-font-size: 24px;");
+            button.setGraphic(null);
+            button.setStyle("-fx-background-color: #D3D3D3; -fx-font-size: 20px;");
+        }
+    }
+    
+    /**
+     * Sets an image on a button
+     * @param button The button to set the image on
+     * @param imagePath The path to the image file (can be local file path or HTTP URL)
+     */
+    private void setCardImage(Button button, String imagePath) {
+        try {
+            Image image;
+            
+            // Check if it's an HTTP/HTTPS URL
+            if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+                image = new Image(imagePath);
+            } else {
+                // Local file path
+                File imageFile = new File(imagePath);
+                if (imageFile.exists()) {
+                    image = new Image(imageFile.toURI().toString());
+                } else {
+                    // Fallback if image not found
+                    System.out.println("Image not found: " + imagePath);
+                    button.setText("?");
+                    button.setGraphic(null);
+                    return;
+                }
+            }
+            
+            ImageView imageView = new ImageView(image);
+            
+            // Set image size based on button size
+            int imageSize = 60;
+            if (rows == 6) {
+                imageSize = 60;
+            } else if (rows == 8) {
+                imageSize = 50;
+            } else if (rows == 10) {
+                imageSize = 40;
+            }
+            
+            imageView.setFitWidth(imageSize);
+            imageView.setFitHeight(imageSize);
+            imageView.setPreserveRatio(true);
+            
+            button.setGraphic(imageView);
+            button.setText("");
+        } catch (Exception e) {
+            // Fallback if image loading fails
+            System.out.println("Error loading image: " + imagePath + " - " + e.getMessage());
+            button.setText("?");
+            button.setGraphic(null);
         }
     }
     
@@ -228,44 +322,90 @@ public class GameController implements Initializable {
     }
     
     /**
-     * Handles the game over state - shows dialog and prompts for player name
+     * Handles the game over state - shows win screen and asks to submit score
      */
     private void handleGameOver() {
         timeThreadRunning = false;
         
-        // Show game over alert
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Game Over!");
-        alert.setHeaderText("Congratulations! You've completed the memory game!");
-        alert.setContentText("Score: " + game.getScore() + "\n" +
-                           "Moves: " + game.getMoves() + "\n" +
-                           "Time: " + formatTime(game.getElapsedTime()));
-        alert.showAndWait();
+        // Show win screen with game stats
+        Alert winAlert = new Alert(Alert.AlertType.INFORMATION);
+        winAlert.setTitle("🎉 You Win! 🎉");
+        winAlert.setHeaderText("Congratulations! You've completed the memory game!");
+        winAlert.setContentText("Final Score: " + game.getScore() + "\n" +
+                               "Total Moves: " + game.getMoves() + "\n" +
+                               "Time Taken: " + formatTime(game.getElapsedTime()) + "\n" +
+                               "Difficulty: " + difficulty.substring(0, 1).toUpperCase() + difficulty.substring(1));
+        winAlert.showAndWait();
         
-        // Prompt for player name
-        TextInputDialog dialog = new TextInputDialog("Player");
-        dialog.setTitle("Save Score");
-        dialog.setHeaderText("Enter your name to save your score:");
-        dialog.setContentText("Name:");
+        // Handle score submission based on login status
+        if (UserSession.getInstance().isLoggedIn()) {
+            // User is logged in - ask if they want to submit
+            Alert submitAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            submitAlert.setTitle("Submit Score?");
+            submitAlert.setHeaderText("Would you like to submit your score to the leaderboard?");
+            submitAlert.setContentText("Score: " + game.getScore() + "\n" +
+                                     "Moves: " + game.getMoves() + "\n" +
+                                     "Time: " + formatTime(game.getElapsedTime()));
+            
+            submitAlert.showAndWait().ifPresent(response -> {
+                if (response == javafx.scene.control.ButtonType.OK) {
+                    submitScoreToLeaderboard();
+                }
+            });
+        } else {
+            // User is not logged in - remind them about saving scores
+            Alert reminderAlert = new Alert(Alert.AlertType.INFORMATION);
+            reminderAlert.setTitle("Score Not Saved");
+            reminderAlert.setHeaderText("Login to Save Your Score!");
+            reminderAlert.setContentText("Your score: " + game.getScore() + "\n" +
+                                       "Moves: " + game.getMoves() + "\n" +
+                                       "Time: " + formatTime(game.getElapsedTime()) + "\n\n" +
+                                       "💡 Tip: Login from the main menu to save your scores\n" +
+                                       "and compete on the leaderboard!");
+            reminderAlert.showAndWait();
+        }
+    }
+    
+    /**
+     * Submits the current game score to the leaderboard via API
+     */
+    private void submitScoreToLeaderboard() {
+        String username = UserSession.getInstance().getUsername();
+        ApiClientService apiClient = ApiClientService.getInstance();
         
-        dialog.showAndWait().ifPresent(name -> {
-            if (!name.trim().isEmpty()) {
-                // Create score object
-                Score score = new Score(name.trim(), game.getScore(), 
-                                      game.getMoves(), game.getElapsedTime());
-                
-                // TODO: Send score to API when HttpClientService is implemented
-                // HttpClientService.getInstance().submitScore(score);
-                
-                // For now, just show a message
-                Alert savedAlert = new Alert(Alert.AlertType.INFORMATION);
-                savedAlert.setTitle("Score Saved");
-                savedAlert.setHeaderText("Your score has been saved!");
-                savedAlert.setContentText("Name: " + score.getPlayerName() + "\n" +
-                                        "Score: " + score.getScore());
-                savedAlert.showAndWait();
-            }
-        });
+        if (!apiClient.checkApiHealth()) {
+            Alert apiAlert = new Alert(Alert.AlertType.WARNING);
+            apiAlert.setTitle("API Unavailable");
+            apiAlert.setHeaderText("Cannot save score");
+            apiAlert.setContentText("API server is not running. Please start the API server.");
+            apiAlert.showAndWait();
+            return;
+        }
+        
+        boolean success = apiClient.submitScore(
+            username,
+            game.getScore(),
+            game.getMoves(),
+            game.getElapsedTime(),
+            difficulty
+        );
+        
+        if (success) {
+            Alert savedAlert = new Alert(Alert.AlertType.INFORMATION);
+            savedAlert.setTitle("Score Submitted!");
+            savedAlert.setHeaderText("Your score has been saved to the leaderboard!");
+            savedAlert.setContentText("Score: " + game.getScore() + "\n" +
+                                    "Moves: " + game.getMoves() + "\n" +
+                                    "Time: " + formatTime(game.getElapsedTime()) + "\n\n" +
+                                    "Check the leaderboard to see your ranking!");
+            savedAlert.showAndWait();
+        } else {
+            Alert errorAlert = new Alert(Alert.AlertType.WARNING);
+            errorAlert.setTitle("Submission Failed");
+            errorAlert.setHeaderText("Failed to submit score");
+            errorAlert.setContentText("Please try again later.");
+            errorAlert.showAndWait();
+        }
     }
     
     /**

@@ -1,18 +1,18 @@
 /**
  * Represents a single card in the memory game.
- * Each card has a value (the image/pair identifier) and a state (face up or face down).
+ * Each card has an image path (the pair identifier) and a state (face up or face down).
  */
 public class Card {
-    private int value; // The pair identifier (two cards with the same value form a pair)
+    private String imagePath; // The image path (two cards with the same path form a pair)
     private boolean isFlipped; // Whether the card is currently face up
     private boolean isMatched; // Whether this card has been matched with its pair
     
     /**
      * Constructor for Card
-     * @param value The pair identifier for this card
+     * @param imagePath The image path for this card
      */
-    public Card(int value) {
-        this.value = value;
+    public Card(String imagePath) {
+        this.imagePath = imagePath;
         this.isFlipped = false;
         this.isMatched = false;
     }
@@ -42,11 +42,11 @@ public class Card {
     }
     
     /**
-     * Gets the value (pair identifier) of this card
-     * @return The card's value
+     * Gets the image path (pair identifier) of this card
+     * @return The card's image path
      */
-    public int getValue() {
-        return value;
+    public String getImagePath() {
+        return imagePath;
     }
     
     /**

@@ -14,8 +14,8 @@ public class Game {
     private boolean isGameOver;
     
     //Constructor for Game
-    public Game(int rows, int cols) {
-        this.board = new GameBoard(rows, cols);
+    public Game(int rows, int cols, String difficulty) {
+        this.board = new GameBoard(rows, cols, difficulty);
         this.score = 0;
         this.moves = 0;
         this.flippedCards = new ArrayList<>();
@@ -71,7 +71,7 @@ public class Game {
         Card card1 = flippedCards.get(0);
         Card card2 = flippedCards.get(1);
         
-        if (card1.getValue() == card2.getValue()) {
+        if (card1.getImagePath().equals(card2.getImagePath())) {
             // Match found!
             card1.setMatched();
             card2.setMatched();
